@@ -11,6 +11,24 @@ struct TreeNode {
     std::unique_ptr<TreeNode> right;
     
     explicit TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+    
+    // Custom deleter to help prevent stack overflow during destruction
+    ~TreeNode() {
+        // Clear children iteratively to avoid deep recursion
+        std::vector<TreeNode*> stack;
+        if (left) stack.push_back(left.release());
+        if (right) stack.push_back(right.release());
+        
+        while (!stack.empty()) {
+            TreeNode* node = stack.back();
+            stack.pop_back();
+            
+            if (node->left) stack.push_back(node->left.release());
+            if (node->right) stack.push_back(node->right.release());
+            
+            delete node;
+        }
+    }
 };
 
 class Solution {
